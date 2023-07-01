@@ -1,0 +1,4 @@
+/.idea/*.xml
+/data/*.xlsx
+/data/bk/*.xlsx
+.env

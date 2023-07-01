@@ -1,0 +1,163 @@
+CREATE TABLE public.ticker (
+	ticker varchar(10) NOT NULL,
+	company_name varchar(300) NOT NULL,
+	sheet_name varchar(20) NULL,
+	"hold" bool NULL,
+	CONSTRAINT ticker_sheet_name UNIQUE (ticker, sheet_name)
+);
+
+
+# Strategy追加
+CREATE TABLE public.minutes_results (
+	ticker varchar(10) NOT NULL,
+	strategy_profit float NULL,
+	natural_profit float NULL,
+	buy_past_days int NULL,
+	diff float4 NULL,
+	last_price float NULL,
+	sell_past_days int NULL,
+	strategy_per float NULL,
+	natural_per float NULL,
+	diff_per float NULL,
+	stdev float NULL,
+	last_rsi int NULL,
+	buy_sell_cnt int NULL,
+	volume bigint NULL,
+	sheet_name varchar(20) NULL,
+	bar varchar(10) NULL,
+	strategy varchar(10) NOT NULL,
+	create_timestamp timestamp NULL
+);
+
+CREATE TABLE public.ticker_jp (
+	ticker varchar(10) NOT NULL,
+	"name" varchar(140) NOT NULL,
+	market_kbn varchar(65) NULL,
+	industory_cd1 int4 NULL,
+	industory_kbn1 varchar(20) NULL,
+	industory_cd2 int4 NULL,
+	industory_kbn2 varchar(25) NULL,
+	"scale" int4 NULL,
+	scake_kbn varchar(15) NULL,
+	"owned" bool NULL
+);
+
+CREATE TABLE public.streams (
+	buy float4 NULL,
+	sell float4 NULL,
+	col_3 float4 NULL,
+	create_timestamp timestamp NULL
+);
+
+
+CREATE TABLE public.months_results (
+	ticker varchar(10) NOT NULL,
+	name varchar(100) null,
+	m_l_per float NULL,
+	m_price float NULL,
+	last_price float NULL,
+	p_up_per float NULL,
+	last_rsi float NULL,
+	l_slope float NULL,
+	m_slope float NULL,
+	over_m_pd int null,
+	create_timestamp timestamp NULL
+);
+
+
+CREATE TABLE public.rktn_hyouka (
+	ticker varchar(10) NOT NULL,
+	hyouka int null,
+	diff_q1 float null,
+	diff_q2 float null,
+	diff_q3 float null,
+	diff_q4 float null,
+	current_profit float null,
+	per float null,
+	pbr float null,
+	create_timestamp timestamp NULL,
+	CONSTRAINT rktn_hyouka_ticker UNIQUE (ticker)
+);
+
+
+CREATE TABLE public.p_up_per_avg (
+bank float NULL,
+electric_gus float NULL,
+iron_metal float NULL,
+car float NULL,
+trade_whole float NULL,
+transport float NULL,
+energy float NULL,
+material_sci float NULL,
+construct float NULL,
+machine float NULL,
+food float NULL,
+retail float NULL,
+real_est float NULL,
+finance float NULL,
+pharma float NULL,
+it float NULL,
+elec_precision float NULL,
+none float null,
+create_timestamp timestamp NULL
+);
+
+
+aws dynamodb create-table
+    --table-name UpDown
+    --attribute-definitions
+        AttributeName=ticker,AttributeType=S
+    --key-schema AttributeName=ticker,KeyType=HASH
+    --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+    --table-class STANDARD
+
+
+aws dynamodb create-table
+    --table-name Streams
+    --attribute-definitions
+        AttributeName=dummy,AttributeType=N
+        AttributeName=unix_time,AttributeType=N
+    --key-schema AttributeName=dummy,KeyType=HASH AttributeName=unix_time,KeyType=RANGE
+    --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+    --table-class STANDARD
+
+aws dynamodb scan --table-name Streams
+
+
+CREATE TABLE public.rating_report (
+    name varchar(20) NOT NULL,
+	ticker int NOT NULL,
+	old varchar(10),
+	new varchar(10),
+	diff_per float8 null,
+	to_price int null,
+	create_date date NULL
+);
+
+CREATE TABLE public.rating_report_price (
+	ticker int NOT NULL,
+	yesterday float null,
+	today float null,
+	diff float null,
+	diff_per float null,
+	create_date date NULL,
+	primary KEY(ticker, create_date)
+);
+
+CREATE TABLE public.fiscal_dates (
+	fiscal_date varchar(10),
+	name varchar(100),
+	ticker int NOT NULL,
+	term varchar(4),
+	primary KEY(ticker)
+);
+
+CREATE TABLE public.rating_report_2 (
+    name varchar(20) NOT NULL,
+	ticker int NOT NULL,
+	old varchar(10),
+	new varchar(10),
+	diff_per float8 null,
+	to_price int null,
+	create_date date NULL
+);
