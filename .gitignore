@@ -2,3 +2,5 @@
 /data/*.xlsx
 /data/bk/*.xlsx
 .env
+venv/*
+*.pyc

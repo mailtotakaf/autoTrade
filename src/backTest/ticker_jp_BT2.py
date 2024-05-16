@@ -213,7 +213,7 @@ def postgres():
     try:
         connector = psycopg2.connect('postgresql://{user}:{password}@{host}:{port}/{dbname}'.format(
             user="postgres",
-            password="Ppass#00",
+            password="YourPW",
             host="localhost",
             port="5432",
             dbname="trading"))

@@ -1,28 +1,32 @@
 import time
 from selenium.webdriver.common.by import By
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service as ChromeService
 import psycopg2
 from psycopg2 import Error
 import re
-from psycopg2 import extras
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+KB_ID = os.getenv("KB_ID")
+KB_PW = os.getenv("KB_PW")
 
 today_date = datetime.now().date()
 date_str = today_date.strftime('%Y-%m-%d')
 
 
 def login():
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+    driver = webdriver.Chrome()
     driver.get('https://member.kabushiki.jp/portalNews/LoginNews.do')
 
     el = driver.find_element(By.NAME, 'userID')
     el.clear()
-    el.send_keys('mailtotakaf@gmail.com')
+    el.send_keys(KB_ID)
 
     el = driver.find_element(By.NAME, 'pass')
-    el.send_keys('Kssap00')
+    el.send_keys(KB_PW)
 
     el = driver.find_element(By.CLASS_NAME, 'btnapply')
     el.click()
@@ -38,7 +42,6 @@ pattern = r'・(.*?)（'
 def search_rating(driver):
     # driver.get('https://kabushiki.jp/news/623397')
     # driver.get('https://kabushiki.jp/news/top?date=2024-01-19&page=2') # デバッグ用に仮設定（この行不要）
-    # driver.get('https://kabushiki.jp/news/top?page=2')  # デバッグ用に仮設定（この行不要）
     # driver.get('https://kabushiki.jp/news/top?page=2')  # デバッグ用に仮設定（この行不要）
     # driver.get('https://kabushiki.jp/news/top?page=3')  # デバッグ用に仮設定（この行不要）
     time.sleep(1)
@@ -56,7 +59,6 @@ def search_rating(driver):
             try:
                 regex_match = re.search(regex_ptn, p.text)
                 if regex_match:
-                    # highest_val = regex_match.group(1)
                     rank_tuple = extract_labels(p.text)
             except Exception as e:
                 print("error.", e)
@@ -64,10 +66,8 @@ def search_rating(driver):
             try:
                 row_list = []
                 if '→' in p.text:
-                    # row_list = extract_info(p.text, highest_val)
                     row_list = extract_info(p.text, rank_tuple)
                 else:
-                    # row_list = extract_info_new(p.text, highest_val)
                     row_list = extract_info_new(p.text, rank_tuple)
 
                 insert_db(row_list)
@@ -112,7 +112,6 @@ def insert_db(row_list):
         create_date = row_list[6]
         sql = f"INSERT INTO rating_report values ('{name}', '{ticker}', '{old}', '{new}', {diff_per}, '{to_price}', '{create_date}');"
         cursor.execute(sql)
-        # extras.execute_values(cursor, "INSERT INTO rating_report values %s", [tuple(row_list)])
         connector.commit()
         connector.close()
     except Exception as e:
@@ -154,14 +153,12 @@ def extract_info(input_string, rank_tuple):
         print("5:", result_5)
         print("6:", result_6)
 
-        # if result_4 == highest_val:
         int5 = int(result_5)
         int6 = int(result_6)
         price_diff = int6 - int5
         print("差額price_diff：", price_diff)
         diff_per = round(price_diff / int5 * 100, 1)
         print(f"差額per diff_per: ${diff_per} %")
-        # check_current(p, driver)
         row_list.append(result_1)
         row_list.append(result_2)
         row_list.append(result_3)
@@ -187,12 +184,13 @@ def extract_info_new(input_string, rank_tuple):
         pattern_3 = r'「(.+?)」'
 
         # 5: "、" に続く" 円" までの数字
-        # pattern_5 = r'、(\d+)円'
+        pattern_5 = r'、(\d+)円'
 
         result_1 = re.search(pattern_1, input_string).group(1)
         result_2 = re.search(pattern_2, input_string).group(1)
         result_3 = re.search(pattern_3, input_string).group(1)
         result_4 = "-"
+        result_5 = re.search(pattern_5, input_string).group(1)
 
         # if result_3 == highest_val:
         row_list.append(result_1)
@@ -200,6 +198,7 @@ def extract_info_new(input_string, rank_tuple):
         row_list.append(result_4)
         row_list.append(result_3)  # 逆にする
         row_list.append(float(99))
+        row_list.append(int(result_5))
         row_list.append(date_str)
         return row_list
     except Exception as e:

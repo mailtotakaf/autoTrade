@@ -1,19 +1,76 @@
-select (a.to_price - b.today) as price_diff, round((a.to_price - b.today)/ b.today * 100) as price_diff_per, * from rating_report a 
-	left join rating_report_price b on a.ticker = b.ticker
-	left join fiscal_dates c on a.ticker = c.ticker
-	where a.create_date = '2024-02-14' and b.create_date = '2024-02-14' order by a.diff_per desc;
---	where a.create_date = '2024-02-14' order by a.diff_per desc;
+・日経225をインデックスに変える
 
-select (a.to_price - b.today) as price_diff, round((a.to_price - b.today)/ b.today * 100) as price_diff_per, * from rating_report a
-	left join rating_report_price b on a.ticker = b.ticker
-	left join fiscal_dates c on a.ticker = c.ticker
-	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム') and a.create_date = '2024-02-15' and b.create_date = '2024-02-15' order by a.diff_per desc;
---	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム') and a.create_date = '2024-02-15' order by a.diff_per desc;
 
-select (a.to_price - b.today) as price_diff, round((a.to_price - b.today)/ b.today * 100) as price_diff_per, * from rating_report a
-	left join rating_report_price b on a.ticker = b.ticker
-	left join fiscal_dates c on a.ticker = c.ticker
-	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = '2024-02-20' and b.create_date = '2024-02-20' order by a.diff_per desc;
---	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = '2024-02-19' order by a.diff_per desc;
---	where a.create_date = '2024-02-20' and b.create_date = '2024-02-20' order by a.diff_per desc;
---	where a.create_date = '2024-02-19' order by a.diff_per desc;
+
+//////////2024/07/22e
+--WithInvestingCom
+select (a.to_price - b.today) as price_diff, round((a.to_price - b.today)/ b.today * 100) as current_price_diff_per, * from rating_report a
+	left join rating_report_price b on a.ticker = b.ticker left join closing_date cd on a.ticker = cd.ticker left join reasonable_prices rp on a.ticker = rp.ticker
+	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = CURRENT_DATE and b.create_date = CURRENT_DATE order by a.diff_per desc;
+
+--WithInvestingCom
+select (a.to_price - b.today) as price_diff, round((a.to_price - b.today)/ b.today * 100) as current_price_diff_per, * from rating_report a
+	left join rating_report_price b on a.ticker = b.ticker left join closing_date cd on a.ticker = cd.ticker left join reasonable_prices rp on a.ticker = rp.ticker
+	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = '2024-07-19' and b.create_date = '2024-07-19' order by a.diff_per desc;
+
+--get_invCom_Dailyの結果確認
+select * from hold_tickers h inner join reasonable_prices r on h.ticker = r.ticker;
+
+select * from closing_date where ticker = '6588';
+
+////////////docker-selenium-lambda
+https://github.com/umihico/docker-selenium-lambda/tree/main
+
+-------------------2024/8/8
+--WithInvestingComのプライス比較追加
+select * from rating_report a
+	left join rating_report_price b on a.ticker = b.ticker left join closing_date cd on a.ticker = cd.ticker left join reasonable_prices rp on a.ticker = rp.ticker
+	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = CURRENT_DATE and b.create_date = CURRENT_DATE and b.today < rp.new_price order by a.diff_per desc;
+
+
+--closing_date
+select * from hold_tickers h inner join closing_date r on h.ticker = r.ticker;
+
+--WithInvestingComと、yahoo_priceのdiff_per見る
+select round(((new_price - old_price)/old_price * 100), 2) as diff_per1, b.*, c.*, round(((b.new_price - c.today)/ c.today * 100)::numeric, 0) as diff_per2 from hold_tickers a inner join reasonable_prices b on a.ticker = b.ticker
+left outer join yahoo_price c on a.ticker = c.ticker order by diff_per2 desc;
+
+--WithInvestingComと、yahoo_priceのdiff_per見る（0除算エラー回避バージョン）
+SELECT ROUND(((new_price - old_price)/old_price * 100), 2) AS diff_per1, b.*, c.*, CASE WHEN c.today <> 0 THEN ROUND(((b.new_price - c.today) / c.today * 100)::numeric, 0) ELSE NULL END AS diff_per2 FROM hold_tickers a
+INNER JOIN reasonable_prices b ON a.ticker = b.ticker LEFT OUTER JOIN yahoo_price c ON a.ticker = c.ticker where c.create_date = CURRENT_DATE ORDER BY diff_per2 DESC;
+
+======================
+--JP
+select * from rating_report a
+	left join rating_report_price b on a.ticker = b.ticker left join closing_date cd on a.ticker = cd.ticker left join reasonable_prices rp on a.ticker = rp.ticker
+	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = CURRENT_DATE and b.create_date = CURRENT_DATE and b.today < rp.new_price order by a.diff_per desc;
+
+--New_Old_Per
+SELECT ROUND(((new_price - old_price)/old_price * 100), 2) AS diff_per1, b.*, c.*, CASE WHEN c.today <> 0 THEN ROUND(((b.new_price - c.today) / c.today * 100)::numeric, 0) ELSE NULL END AS diff_per2 FROM hold_tickers a
+INNER JOIN reasonable_prices b ON a.ticker = b.ticker LEFT OUTER JOIN yahoo_price c ON a.ticker = c.ticker where c.create_date = CURRENT_DATE ORDER BY diff_per2 DESC;
+
+==========================
+--JP （nullのやつあるの応急処置）
+select * from rating_report a
+	left join rating_report_price b on a.ticker = b.ticker left join closing_date cd on a.ticker = cd.ticker left join reasonable_prices rp on a.ticker = rp.ticker
+	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = CURRENT_DATE and b.create_date = CURRENT_DATE and (b.today < rp.new_price or rp.new_price is null) order by a.diff_per desc;
+
+======================
+-- 7日前から1日前までのリスト
+select * from rating_report a
+	left join rating_report_price b on a.ticker = b.ticker left join closing_date cd on a.ticker = cd.ticker left join reasonable_prices rp on a.ticker = rp.ticker
+	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date != CURRENT_DATE and b.create_date != CURRENT_DATE and (b.today < rp.new_price or rp.new_price is null)
+	and a.create_date >= (CURRENT_DATE - INTERVAL '7 days') and  b.create_date > (CURRENT_DATE - INTERVAL '7 days') and a.diff_per > 0 order by a.diff_per desc;
+
+=========
+--JP
+select round(cast(((rp.new_price - b.today) / b.today) as numeric), 2) , * from rating_report a
+	left join rating_report_price b on a.ticker = b.ticker left join closing_date cd on a.ticker = cd.ticker left join reasonable_prices rp on a.ticker = rp.ticker
+	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = CURRENT_DATE and b.create_date = CURRENT_DATE and (b.today < rp.new_price or rp.new_price is null) order by a.diff_per desc;
+
+
+--JP前日
+select round(cast(((rp.new_price - b.today) / b.today) as numeric), 2) , * from rating_report a
+	left join rating_report_price b on a.ticker = b.ticker left join closing_date cd on a.ticker = cd.ticker left join reasonable_prices rp on a.ticker = rp.ticker
+	where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = CURRENT_DATE - 1 and b.create_date = CURRENT_DATE - 1 and (b.today < rp.new_price or rp.new_price is null) order by a.diff_per desc;
+

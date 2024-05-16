@@ -2,3 +2,8 @@ selenium
 webdriver_manager
 psycopg2
 yfinance
+undetected-chromedriver
+setuptools
+matplotlib
+pandas
+yfinance

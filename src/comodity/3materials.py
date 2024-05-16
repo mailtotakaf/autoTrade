@@ -1,6 +1,7 @@
 # http://api.scraperlink.com/investpy/
 # https://qiita.com/danishi/items/07dd1b2f2a28255f7a85
 
+from src.news.const import kab_news_id
 import matplotlib.pyplot as plt
 from psycopg2 import Error
 import urllib.request
@@ -93,7 +94,7 @@ def getMaterialData(self, material):
     start_date = six_months_ago.strftime("%Y-%m-%d")
     end_date = now.strftime("%Y-%m-%d")
 
-    url = 'http://api.scraperlink.com/investpy/?email=mailtotakaf@gmail.com&type=historical_data&product=commodities' \
+    url = 'http://api.scraperlink.com/investpy/?email=' + kab_news_id + '&type=historical_data&product=commodities' \
           '&from_date=' + start_date + '&to_date=' + end_date + '&time_frame=Daily&name=' + material
 
     try:

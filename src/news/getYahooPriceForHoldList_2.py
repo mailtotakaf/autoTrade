@@ -1,14 +1,19 @@
+import pandas as pd
 import yfinance as yfin
 import psycopg2
 from psycopg2 import Error
-from datetime import datetime
+from datetime import datetime, timedelta
 
 today_date = datetime.now().date()
-date_str = today_date.strftime('%Y-%m-%d')
-plotModeSql = f"select ticker from rating_report where create_date = '{date_str}' order by diff_per desc;"
-# plotModeSql = f"select ticker from rating_report  where create_date = '2024-02-06' order by diff_per desc;"
+# today_date = datetime.now().date() - timedelta(days=1) # デバッグ用。24:00過ぎに使用する場合。
 
-term = '2d'
+yesterday_date = today_date - timedelta(days=1)
+
+today_str = today_date.strftime('%Y-%m-%d')
+yesterday_str = yesterday_date.strftime('%Y-%m-%d')
+plotModeSql = "select ticker from hold_tickers;"
+
+term = '5d'
 bar = '1d'
 
 
@@ -17,29 +22,46 @@ def loop_check(ticker_list):
         ticker = ""
         try:
             uppercase_ticker = ticker_str[0]
-            ticker = int(uppercase_ticker)
+            ticker = uppercase_ticker
             print('ticker:', ticker)
-            bare_data = y_data(str(ticker) + ".T")
+            bare_data= None
+            if ticker.isdigit():
+                bare_data = y_data(str(ticker) + ".T")
+            else:
+                bare_data = y_data(ticker)
+
             update_db(bare_data, ticker)
 
         except Exception as e:
-            print('Error. ticker:', ticker)
+            print('Error at loop_check. ticker:', ticker)
             print(e)
 
 
 def update_db(bare_data, ticker):
-    close_list = bare_data['Close']
-    yesterday = round(close_list[0], 1)
-    today = round(close_list[1], 1)
-    diff = round(today - yesterday, 1)
-    diff_per = round(diff / today * 100, 1)
-    upsert_postgres(ticker, yesterday, today, diff, diff_per)
+    try:
+        yesterday_date = pd.to_datetime(bare_data.index[-2])
+        today_date = pd.to_datetime(bare_data.index[-1])
+
+        yesterday_price = bare_data.loc[yesterday_date, 'Close']
+        today_price = bare_data.loc[today_date, 'Close']
+
+        print(f"yesterday: {yesterday_date}: {yesterday_price}")
+        print(f"today: {today_date}: {today_price}")
+
+        diff = round(today_price - yesterday_price, 1)
+        diff_per = round(diff / today_price * 100, 1)
+
+        upsert_postgres(ticker, yesterday_price, today_price, diff, diff_per)
+    except Exception as e:
+        print("Error: update_db.", e)
+        upsert_postgres(ticker, 0, 0, 0, 0)  # あさイチ登録されない対策の確認中。
+        print("0で登録しときますた")
 
 
 def upsert_postgres(ticker, yesterday, today, diff, diff_per):
     try:
-        sql = f"insert into rating_report_price values ({ticker}, {yesterday}, {today}, {diff}, {diff_per}, '{date_str}') " \
-              f"on conflict (ticker, create_date) do update set today = {today}, diff = {diff}, diff_per = {diff_per};"
+        sql = f"insert into yahoo_price values ('{ticker}', {today}, '{today_str}') " \
+              f"on conflict (ticker, create_date) do update set today = {today};"
         cursor = postgres()
         cursor.execute(sql)
         connector.commit()
@@ -81,11 +103,11 @@ def get_ticker_list():
         print("Error: get_ticker_list.", error)
 
 
-class GetLast30Price:
+class GetLastPrice:
     def __init__(self):
         ticker_list = get_ticker_list()
         loop_check(ticker_list)
 
 
 # クラスのインスタンスを作成
-my_obj = GetLast30Price()
+my_obj = GetLastPrice()
