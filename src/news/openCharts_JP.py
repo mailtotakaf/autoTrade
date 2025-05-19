@@ -9,6 +9,8 @@ from selenium.webdriver.common.by import By
 import psycopg2
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 display_width = 1900  # 1920
 display_height = 1000  # 1080
@@ -20,6 +22,51 @@ date_str = today_date.strftime('%Y-%m-%d')
 rating_report_over_zero_sql = "select e.ticker from (select distinct on (a.ticker) a.ticker, a.diff_per from rating_report a left join rating_report_price b on a.ticker = b.ticker left join reasonable_prices rp on a.ticker = rp.ticker where a.new in ('買い', 'Ｂｕｙ', '１', 'Ａ', 'アウトパフォーム', 'オーバーウエート') and a.create_date = CURRENT_DATE and b.create_date = CURRENT_DATE and (b.today < rp.new_price or rp.new_price is null) and a.diff_per >= 0) e order by e.diff_per desc;"
 
 hold_sql = "select ticker from hold_tickers where ticker ~ '[0-9]';"
+
+
+def weekday_number():
+    # 今日の日付が何曜日かを確認して、
+    # 月曜日だったら1、火曜日は2、～金曜日は5
+    # って返す
+    weekday = today_date.weekday()
+    if 0 <= weekday <= 4:
+        return weekday + 1
+    else:
+        return None  # 土日ならNoneなどを返す
+
+
+def click_favorite_page(driver, page_number: int):
+    if not (1 <= page_number <= 5):
+        raise ValueError("page_number must be between 1 and 5")
+
+    try:
+        toggle = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.pop_toggle.prc_add.prc_add_tatelink_under"))
+        )
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", toggle)
+        driver.execute_script("arguments[0].click();", toggle)
+    except Exception as e:
+        print("クリックに失敗しました:", e)
+
+    try:
+        xpath = f"//a[contains(@onclick, 'prcCd={page_number}&')]"
+        print("xpath", xpath)
+        link = WebDriverWait(driver, 3).until(
+            EC.element_to_be_clickable((By.XPATH, xpath))
+        )
+        driver.execute_script("arguments[0].click();", link)
+        print(f"ページ{page_number}をクリックしました")
+    except Exception as e:
+        print(f"ページ{page_number}のクリックに失敗しました: {e}")
+
+    try:
+        el = WebDriverWait(driver, 3).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'div.jGrowl-close'))
+        )
+        driver.execute_script("arguments[0].click();", el)
+        print("✖ ボタンをクリックしました")
+    except Exception as e:
+        print(f"✖ ボタンのクリックに失敗しました: {e}")
 
 
 def openchart(driver, ticker, x_position, y_position, width, height):
@@ -35,6 +82,10 @@ def openchart(driver, ticker, x_position, y_position, width, height):
             el = driver.find_element(By.CSS_SELECTOR, 'img[title="検索"]')
             driver.execute_script("arguments[0].click();", el)
             time.sleep(1)
+            # お気に入りに登録
+            page_number = weekday_number()
+            click_favorite_page(driver, page_number)
+
             # 大きなチャートを見るクリック
             el = driver.find_element(By.LINK_TEXT, "大きなチャートを見る")
 
@@ -60,6 +111,15 @@ def openchart(driver, ticker, x_position, y_position, width, height):
         chart_window_handle = driver.window_handles[-1]
         # チャートウィンドウに切り替える
         driver.switch_to.window(chart_window_handle)
+
+        # 銘柄名
+        element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.displayname.EQTY span.nm"))
+        )
+        company_name = element.text
+        # タイトルを設定
+        driver.execute_script(f"document.title = '{company_name}';")
+
         # 時計プルダウンクリック
         driver.find_element(By.ID, 'mi-period').click()
         # 1分足ラジオチェック
@@ -106,10 +166,15 @@ def get_index(driver, ticker, x_position, y_position, width, height):
         link = None
         if ticker == 1:
             # 日経225" というテキストを持つリンクを見つけてクリック
-            link = driver.find_element(By.XPATH, "//table[@class='tbl-data-01']//a[text()='日経225']")
+            # link = driver.find_element(By.XPATH, "//nobr[@class='ib01']/font")
+            link = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//nobr[@class='ib01']/font"))
+            )
 
         # 新しいタブで
+        # driver.execute_script("arguments[0].setAttribute('target', '_blank'); arguments[0].click();", link)
         driver.execute_script("arguments[0].setAttribute('target', '_blank'); arguments[0].click();", link)
+
         # 新しいウィンドウのハンドルを取得
         new_window_handle = driver.window_handles[-1]
         # 新しいウィンドウに切り替える
@@ -197,7 +262,8 @@ def get_ticker_list(sql):
 
 class OpenChats:
     def __init__(self):
-        ticker_list = get_ticker_list(rating_report_over_zero_sql)
+        # ticker_list = get_ticker_list(rating_report_over_zero_sql)
+        ticker_list = []
         print("ticker_list:", ticker_list)
 
         hold_list = get_ticker_list(hold_sql)

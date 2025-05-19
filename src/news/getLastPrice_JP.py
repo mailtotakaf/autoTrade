@@ -3,6 +3,7 @@ import yfinance as yfin
 import psycopg2
 from psycopg2 import Error
 from datetime import datetime, timedelta
+import time
 
 today_date = datetime.now().date()
 # today_date = datetime.now().date() - timedelta(days=1) # デバッグ用。24:00過ぎに使用する場合。
@@ -16,6 +17,7 @@ plotModeSql = (f"select ticker from rating_report where create_date = '{today_st
 
 term = '5d'
 bar = '1d'
+interval = 2
 
 
 def loop_check(ticker_list):
@@ -25,9 +27,16 @@ def loop_check(ticker_list):
             uppercase_ticker = ticker_str[0]
             ticker = int(uppercase_ticker)
             print('ticker:', ticker)
-            bare_data = y_data(str(ticker) + ".T")
+            tTicker = str(ticker) + ".T"
+
+            # チェックだけ
+            # ticker = yfin.Ticker(tTicker)
+            # print(ticker.info)
+
+            bare_data = yfin.download(tTicker, period=term, interval=bar)
             update_db(bare_data, ticker)
 
+            time.sleep(interval)  # 2秒休憩
         except Exception as e:
             print('Error at loop_check. ticker:', ticker)
             print(e)
@@ -65,10 +74,6 @@ def upsert_postgres(ticker, yesterday, today, diff, diff_per):
         connector.close()
     except(Exception, Error) as error:
         print("Error: upsert_postgres.", error)
-
-
-def y_data(ticker):
-    return yfin.download(ticker, period=term, interval=bar)
 
 
 def postgres():
