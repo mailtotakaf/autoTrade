@@ -166,13 +166,9 @@ def get_index(driver, ticker, x_position, y_position, width, height):
         link = None
         if ticker == 1:
             # 日経225" というテキストを持つリンクを見つけてクリック
-            # link = driver.find_element(By.XPATH, "//nobr[@class='ib01']/font")
-            link = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, "//nobr[@class='ib01']/font"))
-            )
+            link = driver.find_element(By.XPATH, "//table[@class='tbl-data-01']//a[text()='日経225']")
 
         # 新しいタブで
-        # driver.execute_script("arguments[0].setAttribute('target', '_blank'); arguments[0].click();", link)
         driver.execute_script("arguments[0].setAttribute('target', '_blank'); arguments[0].click();", link)
 
         # 新しいウィンドウのハンドルを取得
