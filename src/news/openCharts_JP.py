@@ -112,13 +112,14 @@ def openchart(driver, ticker, x_position, y_position, width, height):
         # チャートウィンドウに切り替える
         driver.switch_to.window(chart_window_handle)
 
-        # 銘柄名
-        element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.displayname.EQTY span.nm"))
-        )
-        company_name = element.text
-        # タイトルを設定
-        driver.execute_script(f"document.title = '{company_name}';")
+        if ticker != 1:
+            # 銘柄名
+            element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.displayname.EQTY span.nm"))
+            )
+            company_name = element.text
+            # タイトルを設定
+            driver.execute_script(f"document.title = '{company_name}';")
 
         # 時計プルダウンクリック
         driver.find_element(By.ID, 'mi-period').click()
@@ -258,8 +259,7 @@ def get_ticker_list(sql):
 
 class OpenChats:
     def __init__(self):
-        # ticker_list = get_ticker_list(rating_report_over_zero_sql)
-        ticker_list = []
+        ticker_list = get_ticker_list(rating_report_over_zero_sql)
         print("ticker_list:", ticker_list)
 
         hold_list = get_ticker_list(hold_sql)
