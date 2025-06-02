@@ -34,9 +34,10 @@ def loop_check(ticker_list):
             # print(ticker.info)
 
             bare_data = yfin.download(tTicker, period=term, interval=bar)
+            # bare_data = [] # Yahooは使えなくなったので
             update_db(bare_data, ticker)
 
-            time.sleep(interval)  # 2秒休憩
+            # time.sleep(interval)  # 2秒休憩
         except Exception as e:
             print('Error at loop_check. ticker:', ticker)
             print(e)
