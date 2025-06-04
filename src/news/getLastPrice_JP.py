@@ -33,8 +33,8 @@ def loop_check(ticker_list):
             # ticker = yfin.Ticker(tTicker)
             # print(ticker.info)
 
-            bare_data = yfin.download(tTicker, period=term, interval=bar)
-            # bare_data = [] # Yahooは使えなくなったので
+            # bare_data = yfin.download(tTicker, period=term, interval=bar)
+            bare_data = [] # Yahooは使えなくなったので
             update_db(bare_data, ticker)
 
             # time.sleep(interval)  # 2秒休憩
