@@ -41,7 +41,7 @@ regex_ptn = r'・([^・＞]+)＞'
 pattern = r'・(.*?)（'
 def search_rating(driver):
     # driver.get('https://kabushiki.jp/news/623397')
-    driver.get('https://kabushiki.jp/news/top?date=2024-01-19&page=2') # デバッグ用に仮設定（この行不要）
+    # driver.get('https://kabushiki.jp/news/top?date=2024-01-19&page=2') # デバッグ用に仮設定（この行不要）
     # driver.get('https://kabushiki.jp/news/top?page=2')  # デバッグ用に仮設定（この行不要）
     # driver.get('https://kabushiki.jp/news/top?page=3')  # デバッグ用に仮設定（この行不要）
     time.sleep(1)
@@ -154,9 +154,12 @@ def extract_info(input_string, rank_tuple):
         print("5:", result_5)  # from
         print("6:", result_6)  # to
 
-        int5 = int(result_5)
-        int6 = int(result_6)
+        int5 = int(result_5) # from
+        int6 = int(result_6) # to
         price_diff = int6 - int5
+        if price_diff < 0: # マイナスだったら
+            return None
+
         print("差額price_diff：", price_diff)
         diff_per = round(price_diff / int5 * 100, 1)
         print(f"差額per diff_per: ${diff_per} %")
@@ -165,8 +168,8 @@ def extract_info(input_string, rank_tuple):
         row_list.append(result_3)
         row_list.append(result_4)
         row_list.append(float(diff_per))
-        row_list.append(int5) # 追加
-        row_list.append(int6)
+        row_list.append(int5) # from
+        row_list.append(int6) # to
         row_list.append(date_str)
         return row_list
     except Exception as e:
