@@ -260,7 +260,7 @@ def get_ticker_list(sql):
 class OpenChats:
     def __init__(self):
         ticker_list = get_ticker_list(rating_report_over_zero_sql)
-        print("ticker_list:", ticker_list)
+        # print("ticker_list:", ticker_list)
 
         hold_list = get_ticker_list(hold_sql)
         ticker_list = ticker_list + hold_list

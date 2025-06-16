@@ -123,13 +123,13 @@ aws dynamodb create-table
 
 aws dynamodb scan --table-name Streams
 
-
 CREATE TABLE public.rating_report (
     name varchar(20) NOT NULL,
 	ticker varchar(6) NOT NULL,
 	old varchar(10),
 	new varchar(10),
 	diff_per float8 null,
+	from_price int null,
 	to_price int null,
 	create_date date NULL
 );

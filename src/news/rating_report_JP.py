@@ -41,7 +41,7 @@ regex_ptn = r'・([^・＞]+)＞'
 pattern = r'・(.*?)（'
 def search_rating(driver):
     # driver.get('https://kabushiki.jp/news/623397')
-    # driver.get('https://kabushiki.jp/news/top?date=2024-01-19&page=2') # デバッグ用に仮設定（この行不要）
+    driver.get('https://kabushiki.jp/news/top?date=2024-01-19&page=2') # デバッグ用に仮設定（この行不要）
     # driver.get('https://kabushiki.jp/news/top?page=2')  # デバッグ用に仮設定（この行不要）
     # driver.get('https://kabushiki.jp/news/top?page=3')  # デバッグ用に仮設定（この行不要）
     time.sleep(1)
@@ -108,9 +108,10 @@ def insert_db(row_list):
         old = row_list[2]
         new = row_list[3]
         diff_per = row_list[4]
-        to_price = row_list[5]
-        create_date = row_list[6]
-        sql = f"INSERT INTO rating_report values ('{name}', '{ticker}', '{old}', '{new}', {diff_per}, '{to_price}', '{create_date}');"
+        from_price = row_list[5]
+        to_price = row_list[6]
+        create_date = row_list[7]
+        sql = f"INSERT INTO rating_report values ('{name}', '{ticker}', '{old}', '{new}', {diff_per}, '{from_price}', '{to_price}', '{create_date}');"
         cursor.execute(sql)
         connector.commit()
         connector.close()
@@ -150,8 +151,8 @@ def extract_info(input_string, rank_tuple):
         print("2:", result_2)
         print("3:", result_3)
         print("4:", result_4)
-        print("5:", result_5)
-        print("6:", result_6)
+        print("5:", result_5)  # from
+        print("6:", result_6)  # to
 
         int5 = int(result_5)
         int6 = int(result_6)
@@ -164,6 +165,7 @@ def extract_info(input_string, rank_tuple):
         row_list.append(result_3)
         row_list.append(result_4)
         row_list.append(float(diff_per))
+        row_list.append(int5) # 追加
         row_list.append(int6)
         row_list.append(date_str)
         return row_list
@@ -198,6 +200,7 @@ def extract_info_new(input_string, rank_tuple):
         row_list.append(result_4)
         row_list.append(result_3)  # 逆にする
         row_list.append(float(99))
+        row_list.append(int(0)) # 追加
         row_list.append(int(result_5))
         row_list.append(date_str)
         return row_list
