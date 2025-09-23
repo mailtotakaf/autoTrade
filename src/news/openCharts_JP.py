@@ -86,68 +86,68 @@ def openchart(driver, ticker, x_position, y_position, width, height):
             page_number = weekday_number()
             click_favorite_page(driver, page_number)
 
-            # 大きなチャートを見るクリック
-            el = driver.find_element(By.LINK_TEXT, "大きなチャートを見る")
+            # # 大きなチャートを見るクリック
+            # el = driver.find_element(By.LINK_TEXT, "大きなチャートを見る")
+            #
+            # # 新しいタブで
+            # driver.execute_script("arguments[0].setAttribute('target', '_blank'); arguments[0].click();", el)
+            # # 元のウィンドウのハンドルを取得
+            # original_window_handle = driver.current_window_handle
+            # # 元のウィンドウに切り替える
+            # driver.switch_to.window(original_window_handle)
+            # # 元のウィンドウを閉じる
+            # driver.close()
+            # # 新しいウィンドウのハンドルを取得
+            # new_window_handle = driver.window_handles[-1]
+            # # 新しいウィンドウに切り替える
+            # driver.switch_to.window(new_window_handle)
 
-            # 新しいタブで
-            driver.execute_script("arguments[0].setAttribute('target', '_blank'); arguments[0].click();", el)
-            # 元のウィンドウのハンドルを取得
-            original_window_handle = driver.current_window_handle
-            # 元のウィンドウに切り替える
-            driver.switch_to.window(original_window_handle)
-            # 元のウィンドウを閉じる
-            driver.close()
-            # 新しいウィンドウのハンドルを取得
-            new_window_handle = driver.window_handles[-1]
-            # 新しいウィンドウに切り替える
-            driver.switch_to.window(new_window_handle)
-
-        # テクニカルチャートクリック
-        el = driver.find_element(By.CSS_SELECTOR, 'input[src="/member/images/btn-technical-chart.gif"]')
-        driver.execute_script("arguments[0].click();", el)
-        # 元のウィンドウのハンドルを取得
-        original_window_handle = driver.current_window_handle
-        # チャートウィンドウのハンドルを取得
-        chart_window_handle = driver.window_handles[-1]
-        # チャートウィンドウに切り替える
-        driver.switch_to.window(chart_window_handle)
-
-        if ticker != 1:
-            # 銘柄名
-            element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div.displayname.EQTY span.nm"))
-            )
-            company_name = element.text
-            # タイトルを設定
-            driver.execute_script(f"document.title = '{company_name}';")
-
-        # 時計プルダウンクリック
-        driver.find_element(By.ID, 'mi-period').click()
-        # 1分足ラジオチェック
-        driver.find_element(By.NAME, '1').click()
-        # シフト移動量を大きくするために画面最大化
-        driver.maximize_window()
-        # 時計プルダウンを消すためにクリックする
-        driver.find_element(By.ID, "chartbox").click()
-        # chartbox要素を探します
-        chartbox = driver.find_element(By.ID, "chartbox")
-        # ActionChainsを使用して要素をクリックしてドラッグします
-        actions = ActionChains(driver)
-        # チャートウィンドウのサイズを変更
-        driver.set_window_size(width, height)
-        # JavaScriptを使って少しスクロール
-        driver.execute_script("window.scrollBy(0, 100);")
-        # 再シフト調整（ウィンドウ最小だと移動量50くらいが限度なので9回くらい必要）
-        for i in range(9):
-            actions.click_and_hold(chartbox).move_by_offset(-50, 0).release().perform()
-        # ウィンドウの位置を移動するJavaScriptコード
-        script = f'''
-            window.moveTo({x_position}, {y_position});
-        '''
-        # ウィンドウにJavaScriptコードを実行する
-        driver.execute_script(script)
-        # 元のウィンドウに戻る
-        driver.switch_to.window(original_window_handle)
+        # # テクニカルチャートクリック
+        # el = driver.find_element(By.CSS_SELECTOR, 'input[src="/member/images/btn-technical-chart.gif"]')
+        # driver.execute_script("arguments[0].click();", el)
+        # # 元のウィンドウのハンドルを取得
+        # original_window_handle = driver.current_window_handle
+        # # チャートウィンドウのハンドルを取得
+        # chart_window_handle = driver.window_handles[-1]
+        # # チャートウィンドウに切り替える
+        # driver.switch_to.window(chart_window_handle)
+        #
+        # if ticker != 1:
+        #     # 銘柄名
+        #     element = WebDriverWait(driver, 10).until(
+        #         EC.presence_of_element_located((By.CSS_SELECTOR, "div.displayname.EQTY span.nm"))
+        #     )
+        #     company_name = element.text
+        #     # タイトルを設定
+        #     driver.execute_script(f"document.title = '{company_name}';")
+        #
+        # # 時計プルダウンクリック
+        # driver.find_element(By.ID, 'mi-period').click()
+        # # 1分足ラジオチェック
+        # driver.find_element(By.NAME, '1').click()
+        # # シフト移動量を大きくするために画面最大化
+        # driver.maximize_window()
+        # # 時計プルダウンを消すためにクリックする
+        # driver.find_element(By.ID, "chartbox").click()
+        # # chartbox要素を探します
+        # chartbox = driver.find_element(By.ID, "chartbox")
+        # # ActionChainsを使用して要素をクリックしてドラッグします
+        # actions = ActionChains(driver)
+        # # チャートウィンドウのサイズを変更
+        # driver.set_window_size(width, height)
+        # # JavaScriptを使って少しスクロール
+        # driver.execute_script("window.scrollBy(0, 100);")
+        # # 再シフト調整（ウィンドウ最小だと移動量50くらいが限度なので9回くらい必要）
+        # for i in range(9):
+        #     actions.click_and_hold(chartbox).move_by_offset(-50, 0).release().perform()
+        # # ウィンドウの位置を移動するJavaScriptコード
+        # script = f'''
+        #     window.moveTo({x_position}, {y_position});
+        # '''
+        # # ウィンドウにJavaScriptコードを実行する
+        # driver.execute_script(script)
+        # # 元のウィンドウに戻る
+        # driver.switch_to.window(original_window_handle)
     except Exception as e:
         print('Error. ticker:', ticker)
         print(e)
